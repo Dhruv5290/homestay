@@ -716,10 +716,83 @@ section {
   background: var(--pastel-cream);
 }
 
+.rooms-carousel-wrapper {
+  position: relative;
+}
+
 .rooms-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 40px;
+}
+
+.carousel-arrow {
+  display: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 50px;
+  height: 50px;
+  background: var(--white);
+  border: 2px solid var(--primary);
+  border-radius: 50%;
+  color: var(--primary);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all var(--transition);
+  z-index: 10;
+  box-shadow: var(--shadow-soft);
+}
+
+.carousel-arrow:hover {
+  background: var(--primary);
+  color: var(--white);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-arrow-left {
+  left: -25px;
+}
+
+.carousel-arrow-right {
+  right: -25px;
+}
+
+.carousel-arrow:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.carousel-arrow:disabled:hover {
+  background: var(--white);
+  color: var(--primary);
+  transform: translateY(-50%) scale(1);
+}
+
+.carousel-dots {
+  display: none;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 40px;
+}
+
+.carousel-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--pastel-sage);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.carousel-dot.active {
+  background: var(--primary);
+  transform: scale(1.3);
+}
+
+.carousel-dot:hover {
+  background: var(--secondary);
 }
 
 .room-card {
@@ -1146,6 +1219,13 @@ section {
 .social-links {
   display: flex;
   gap: 15px;
+  align-items: center;
+  font-size: 0;
+}
+
+.social-links::before,
+.social-links::after {
+  display: none;
 }
 
 .social-links a {
@@ -1160,6 +1240,11 @@ section {
   color: var(--white);
   font-size: 1.1rem;
   transition: all var(--transition);
+  flex-shrink: 0;
+}
+
+.social-links a i {
+  font-size: 1.1rem;
 }
 
 .social-links a:hover {
@@ -1536,6 +1621,48 @@ section {
     bottom: 30px;
   }
   
+  /* Mobile Rooms Carousel */
+  .rooms-carousel-wrapper {
+    position: relative;
+    padding: 0 50px;
+  }
+  
+  .carousel-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
+    height: 45px;
+    font-size: 1rem;
+  }
+  
+  .carousel-arrow-left {
+    left: 0;
+  }
+  
+  .carousel-arrow-right {
+    right: 0;
+  }
+  
+  .rooms-grid {
+    display: flex;
+    overflow-x: hidden;
+    scroll-snap-type: x mandatory;
+    gap: 0;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .room-card {
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+    margin: 0;
+  }
+  
+  .carousel-dots {
+    display: flex;
+  }
+  
   .hero-buttons {
     margin-bottom: 40px;
   }
@@ -1545,6 +1672,11 @@ section {
   }
 
   .rooms-grid,
+  .amenities-grid,
+  .gallery-grid {
+    /* Rooms grid is now handled by carousel on mobile */
+  }
+  
   .amenities-grid,
   .gallery-grid {
     grid-template-columns: 1fr;

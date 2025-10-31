@@ -535,6 +535,166 @@ class ParallaxEffect {
 }
 
 // ===================================
+// ROOMS CAROUSEL (Mobile)
+// ===================================
+
+class RoomsCarousel {
+  constructor() {
+    this.carousel = document.getElementById('roomsCarousel');
+    this.leftArrow = document.querySelector('.carousel-arrow-left');
+    this.rightArrow = document.querySelector('.carousel-arrow-right');
+    this.dotsContainer = document.getElementById('carouselDots');
+    this.currentIndex = 0;
+    this.totalRooms = 0;
+    this.init();
+  }
+
+  init() {
+    if (!this.carousel) return;
+
+    this.totalRooms = this.carousel.querySelectorAll('.room-card').length;
+    
+    // Create dots
+    this.createDots();
+    
+    // Arrow click handlers
+    if (this.leftArrow) {
+      this.leftArrow.addEventListener('click', () => this.goToPrevious());
+    }
+    
+    if (this.rightArrow) {
+      this.rightArrow.addEventListener('click', () => this.goToNext());
+    }
+    
+    // Touch/swipe support
+    this.addSwipeSupport();
+    
+    // Keyboard support
+    this.addKeyboardSupport();
+    
+    // Update initial state
+    this.updateCarousel();
+  }
+
+  createDots() {
+    if (!this.dotsContainer) return;
+    
+    for (let i = 0; i < this.totalRooms; i++) {
+      const dot = document.createElement('button');
+      dot.classList.add('carousel-dot');
+      dot.setAttribute('aria-label', `Go to room ${i + 1}`);
+      
+      if (i === 0) {
+        dot.classList.add('active');
+      }
+      
+      dot.addEventListener('click', () => this.goToSlide(i));
+      this.dotsContainer.appendChild(dot);
+    }
+  }
+
+  goToPrevious() {
+    if (this.currentIndex > 0) {
+      this.currentIndex--;
+      this.updateCarousel();
+    }
+  }
+
+  goToNext() {
+    if (this.currentIndex < this.totalRooms - 1) {
+      this.currentIndex++;
+      this.updateCarousel();
+    }
+  }
+
+  goToSlide(index) {
+    this.currentIndex = index;
+    this.updateCarousel();
+  }
+
+  updateCarousel() {
+    // Scroll to the current card
+    const cardWidth = this.carousel.querySelector('.room-card').offsetWidth;
+    this.carousel.scrollTo({
+      left: cardWidth * this.currentIndex,
+      behavior: 'smooth'
+    });
+
+    // Update dots
+    const dots = this.dotsContainer.querySelectorAll('.carousel-dot');
+    dots.forEach((dot, index) => {
+      if (index === this.currentIndex) {
+        dot.classList.add('active');
+      } else {
+        dot.classList.remove('active');
+      }
+    });
+
+    // Update arrow states
+    if (this.leftArrow) {
+      this.leftArrow.disabled = this.currentIndex === 0;
+    }
+    
+    if (this.rightArrow) {
+      this.rightArrow.disabled = this.currentIndex === this.totalRooms - 1;
+    }
+  }
+
+  addSwipeSupport() {
+    let startX = 0;
+    let isDragging = false;
+
+    this.carousel.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      isDragging = true;
+    });
+
+    this.carousel.addEventListener('touchmove', (e) => {
+      if (!isDragging) return;
+      e.preventDefault();
+    }, { passive: false });
+
+    this.carousel.addEventListener('touchend', (e) => {
+      if (!isDragging) return;
+      
+      const endX = e.changedTouches[0].clientX;
+      const diff = startX - endX;
+
+      // Swipe threshold
+      if (Math.abs(diff) > 50) {
+        if (diff > 0) {
+          // Swiped left - go to next
+          this.goToNext();
+        } else {
+          // Swiped right - go to previous
+          this.goToPrevious();
+        }
+      }
+
+      isDragging = false;
+    });
+  }
+
+  addKeyboardSupport() {
+    document.addEventListener('keydown', (e) => {
+      // Only respond to arrow keys when carousel is in view
+      const carouselRect = this.carousel.getBoundingClientRect();
+      const isInView = carouselRect.top < window.innerHeight && carouselRect.bottom > 0;
+      
+      if (!isInView) return;
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        this.goToPrevious();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        this.goToNext();
+      }
+    });
+  }
+}
+
+// ===================================
 // SMOOTH ANCHOR SCROLLING
 // ===================================
 
@@ -599,6 +759,7 @@ class App {
       new GalleryLightbox();
       new ParallaxEffect();
       new SmoothScroll();
+      new RoomsCarousel();
       
       console.log('✨ Mountain Retreat website initialized successfully!');
     } catch (error) {
@@ -609,4 +770,3 @@ class App {
 
 // Start the application
 new App();
-

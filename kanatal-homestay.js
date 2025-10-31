@@ -43,24 +43,34 @@ class LoadingScreen {
   }
 
   init() {
+    // Ensure smooth rendering
+    if (this.loadingScreen) {
+      // Force hardware acceleration
+      this.loadingScreen.style.transform = 'translateZ(0)';
+    }
+
     window.addEventListener('load', () => {
       setTimeout(() => {
         this.hide();
-      }, 1000);
+      }, 1200); // Slightly longer to ensure smooth experience
     });
 
-    // Fallback
+    // Fallback: Hide after max 3.5 seconds
     setTimeout(() => {
       this.hide();
-    }, 3000);
+    }, 3500);
   }
 
   hide() {
-    if (this.loadingScreen) {
+    if (this.loadingScreen && !this.loadingScreen.classList.contains('hidden')) {
       this.loadingScreen.classList.add('hidden');
+      
+      // Remove from DOM after animation completes
       setTimeout(() => {
-        this.loadingScreen.remove();
-      }, 600);
+        if (this.loadingScreen.parentNode) {
+          this.loadingScreen.remove();
+        }
+      }, 800); // Match CSS transition duration
     }
   }
 }

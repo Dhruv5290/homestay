@@ -652,20 +652,49 @@ class RoomsCarousel {
 
   addSwipeSupport() {
     let startX = 0;
+    let startY = 0;
+    let currentX = 0;
+    let currentY = 0;
     let isDragging = false;
+    let isHorizontalSwipe = false;
 
     this.carousel.addEventListener('touchstart', (e) => {
       startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
       isDragging = true;
-    });
+      isHorizontalSwipe = false;
+    }, { passive: true });
 
     this.carousel.addEventListener('touchmove', (e) => {
       if (!isDragging) return;
-      e.preventDefault();
+      
+      currentX = e.touches[0].clientX;
+      currentY = e.touches[0].clientY;
+      
+      const diffX = Math.abs(currentX - startX);
+      const diffY = Math.abs(currentY - startY);
+      
+      // Determine if this is a horizontal swipe
+      if (diffX > 10 || diffY > 10) {
+        if (diffX > diffY * 1.5) {
+          // It's a horizontal swipe - prevent default
+          isHorizontalSwipe = true;
+          if (e.cancelable) {
+            e.preventDefault();
+          }
+        } else {
+          // It's a vertical swipe - allow page scroll
+          isDragging = false;
+        }
+      }
     }, { passive: false });
 
     this.carousel.addEventListener('touchend', (e) => {
-      if (!isDragging) return;
+      if (!isDragging || !isHorizontalSwipe) {
+        isDragging = false;
+        isHorizontalSwipe = false;
+        return;
+      }
       
       const endX = e.changedTouches[0].clientX;
       const diff = startX - endX;
@@ -682,7 +711,8 @@ class RoomsCarousel {
       }
 
       isDragging = false;
-    });
+      isHorizontalSwipe = false;
+    }, { passive: true });
   }
 
   addKeyboardSupport() {
@@ -700,6 +730,45 @@ class RoomsCarousel {
         e.preventDefault();
         this.goToNext();
       }
+    });
+  }
+}
+
+// ===================================
+// ROOM IMAGE ZOOM (Mobile Only)
+// ===================================
+
+class RoomImageZoom {
+  constructor() {
+    this.init();
+  }
+
+  init() {
+    const roomImages = document.querySelectorAll('.room-image');
+    
+    roomImages.forEach(imageContainer => {
+      imageContainer.addEventListener('click', (e) => {
+        // Prevent if clicking on card content (not image)
+        if (e.target.closest('.room-content')) return;
+        
+        // Toggle zoom
+        const isZoomed = imageContainer.classList.contains('zoom-active');
+        
+        // Remove zoom from all images
+        document.querySelectorAll('.room-image').forEach(img => {
+          img.classList.remove('zoom-active');
+        });
+        
+        // Add zoom to clicked image if it wasn't already zoomed
+        if (!isZoomed) {
+          imageContainer.classList.add('zoom-active');
+          
+          // Auto remove after 2 seconds
+          setTimeout(() => {
+            imageContainer.classList.remove('zoom-active');
+          }, 2000);
+        }
+      });
     });
   }
 }
@@ -740,6 +809,192 @@ class SmoothScroll {
   }
 }
 
+
+// ===================================
+// AMENITIES CAROUSEL (MOBILE)
+// ===================================
+
+class AmenitiesCarousel {
+  constructor() {
+    this.carousel = document.getElementById('amenitiesCarousel');
+    this.leftArrow = document.querySelector('.amenities-arrow-left');
+    this.rightArrow = document.querySelector('.amenities-arrow-right');
+    this.currentIndex = 0;
+    this.totalCards = 0;
+    this.init();
+  }
+
+  init() {
+    if (!this.carousel || window.innerWidth > 768) return;
+
+    this.totalCards = this.carousel.querySelectorAll('.amenity-card').length;
+    
+    // Arrow click handlers
+    if (this.leftArrow) {
+      this.leftArrow.addEventListener('click', () => this.goToPrevious());
+    }
+    
+    if (this.rightArrow) {
+      this.rightArrow.addEventListener('click', () => this.goToNext());
+    }
+    
+    // Touch/swipe support
+    this.addSwipeSupport();
+    
+    // Update initial state
+    this.updateCarousel();
+  }
+
+  goToPrevious() {
+    if (this.currentIndex > 0) {
+      this.currentIndex--;
+      this.updateCarousel();
+    }
+  }
+
+  goToNext() {
+    const visibleCards = this.getVisibleCards();
+    if (this.currentIndex < this.totalCards - visibleCards) {
+      this.currentIndex++;
+      this.updateCarousel();
+    }
+  }
+
+  getVisibleCards() {
+    // Calculate how many cards are visible
+    const containerWidth = this.carousel.offsetWidth;
+    const card = this.carousel.querySelector('.amenity-card');
+    if (!card) return 1;
+    
+    const cardWidth = card.offsetWidth + 20; // card + gap
+    return Math.floor(containerWidth / cardWidth) || 1;
+  }
+
+  updateCarousel() {
+    // Get actual card element to measure real width
+    const card = this.carousel.querySelector('.amenity-card');
+    if (!card) return;
+    
+    // Get the card width including margin/gap
+    const cardStyle = window.getComputedStyle(card);
+    const cardWidth = card.offsetWidth;
+    const gap = 20; // Gap between cards
+    
+    this.carousel.scrollTo({
+      left: (cardWidth + gap) * this.currentIndex,
+      behavior: 'smooth'
+    });
+
+    // Update arrow states
+    if (this.leftArrow) {
+      this.leftArrow.disabled = this.currentIndex === 0;
+    }
+    
+    const visibleCards = this.getVisibleCards();
+    if (this.rightArrow) {
+      this.rightArrow.disabled = this.currentIndex >= this.totalCards - visibleCards;
+    }
+  }
+
+  addSwipeSupport() {
+    let startX = 0;
+    let startY = 0;
+    let currentX = 0;
+    let currentY = 0;
+    let isDragging = false;
+    let isHorizontalSwipe = false;
+
+    this.carousel.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      isDragging = true;
+      isHorizontalSwipe = false;
+    }, { passive: true });
+
+    this.carousel.addEventListener('touchmove', (e) => {
+      if (!isDragging) return;
+      
+      currentX = e.touches[0].clientX;
+      currentY = e.touches[0].clientY;
+      
+      const diffX = Math.abs(currentX - startX);
+      const diffY = Math.abs(currentY - startY);
+      
+      if (diffX > 10 || diffY > 10) {
+        if (diffX > diffY * 1.5) {
+          isHorizontalSwipe = true;
+          if (e.cancelable) {
+            e.preventDefault();
+          }
+        } else {
+          isDragging = false;
+        }
+      }
+    }, { passive: false });
+
+    this.carousel.addEventListener('touchend', (e) => {
+      if (!isDragging || !isHorizontalSwipe) {
+        isDragging = false;
+        isHorizontalSwipe = false;
+        return;
+      }
+      
+      const endX = e.changedTouches[0].clientX;
+      const diff = startX - endX;
+
+      if (Math.abs(diff) > 50) {
+        if (diff > 0) {
+          this.goToNext();
+        } else {
+          this.goToPrevious();
+        }
+      }
+
+      isDragging = false;
+      isHorizontalSwipe = false;
+    }, { passive: true });
+  }
+}
+
+// ===================================
+// TESTIMONIALS AUTO-SCROLL
+// ===================================
+
+class TestimonialsAutoScroll {
+  constructor() {
+    this.slider = document.querySelector('.testimonials-slider');
+    this.init();
+  }
+
+  init() {
+    if (!this.slider) return;
+
+    // Wrap testimonial cards in a track
+    const cards = Array.from(this.slider.querySelectorAll('.testimonial-card'));
+    
+    if (cards.length === 0) return;
+
+    // Create track div
+    const track = document.createElement('div');
+    track.className = 'testimonials-track';
+    
+    // Clone cards for infinite loop effect
+    cards.forEach(card => {
+      track.appendChild(card);
+    });
+    
+    // Clone again for seamless loop
+    cards.forEach(card => {
+      const clone = card.cloneNode(true);
+      track.appendChild(clone);
+    });
+    
+    // Clear slider and add track
+    this.slider.innerHTML = '';
+    this.slider.appendChild(track);
+  }
+}
+
 // ===================================
 // INITIALIZE ALL
 // ===================================
@@ -770,8 +1025,11 @@ class App {
       new ParallaxEffect();
       new SmoothScroll();
       new RoomsCarousel();
+      new RoomImageZoom();
+      new AmenitiesCarousel();
+      new TestimonialsAutoScroll();
       
-      console.log('✨ Mountain Retreat website initialized successfully!');
+      console.logconsole.log('Ã¢Å“Â¨ Mountain Retreat website initialized successfully!');
     } catch (error) {
       console.error('Error initializing website:', error);
     }

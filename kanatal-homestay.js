@@ -861,27 +861,14 @@ class AmenitiesCarousel {
   }
 
   getVisibleCards() {
-    // Calculate how many cards are visible
-    const containerWidth = this.carousel.offsetWidth;
-    const card = this.carousel.querySelector('.amenity-card');
-    if (!card) return 1;
-    
-    const cardWidth = card.offsetWidth + 20; // card + gap
-    return Math.floor(containerWidth / cardWidth) || 1;
+    // On mobile, we show 1 card at a time
+    return 1;
   }
 
   updateCarousel() {
-    // Get actual card element to measure real width
-    const card = this.carousel.querySelector('.amenity-card');
-    if (!card) return;
-    
-    // Get the card width including margin/gap
-    const cardStyle = window.getComputedStyle(card);
-    const cardWidth = card.offsetWidth;
-    const gap = 20; // Gap between cards
-    
+    const cardWidth = 280 + 20; // card width + gap
     this.carousel.scrollTo({
-      left: (cardWidth + gap) * this.currentIndex,
+      left: cardWidth * this.currentIndex,
       behavior: 'smooth'
     });
 

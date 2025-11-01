@@ -840,6 +840,7 @@ class App {
       new SmoothScroll();
       new RoomsCarousel();
       new RoomImageZoom();
+      new AmenitiesCarousel();
       
       console.log('✨ Mountain Retreat website initialized successfully!');
     } catch (error) {
@@ -850,3 +851,130 @@ class App {
 
 // Start the application
 new App();
+// ===================================
+// AMENITIES CAROUSEL (Mobile)
+// ===================================
+
+class AmenitiesCarousel {
+  constructor() {
+    this.carousel = document.getElementById('amenitiesCarousel');
+    this.leftArrow = document.querySelector('.amenities-arrow-left');
+    this.rightArrow = document.querySelector('.amenities-arrow-right');
+    this.currentIndex = 0;
+    this.totalCards = 0;
+    this.init();
+  }
+
+  init() {
+    if (!this.carousel) return;
+
+    this.totalCards = this.carousel.querySelectorAll('.amenity-card').length;
+    
+    // Arrow click handlers
+    if (this.leftArrow) {
+      this.leftArrow.addEventListener('click', () => this.goToPrevious());
+    }
+    
+    if (this.rightArrow) {
+      this.rightArrow.addEventListener('click', () => this.goToNext());
+    }
+    
+    // Touch/swipe support
+    this.addSwipeSupport();
+    
+    // Update initial state
+    this.updateCarousel();
+  }
+
+  goToPrevious() {
+    if (this.currentIndex > 0) {
+      this.currentIndex--;
+      this.updateCarousel();
+    }
+  }
+
+  goToNext() {
+    if (this.currentIndex < this.totalCards - 1) {
+      this.currentIndex++;
+      this.updateCarousel();
+    }
+  }
+
+  updateCarousel() {
+    // Scroll to the current card
+    const cardWidth = this.carousel.querySelector('.amenity-card').offsetWidth;
+    const gap = 20; // gap between cards
+    this.carousel.scrollTo({
+      left: (cardWidth + gap) * this.currentIndex,
+      behavior: 'smooth'
+    });
+
+    // Update arrow states
+    if (this.leftArrow) {
+      this.leftArrow.disabled = this.currentIndex === 0;
+    }
+    
+    if (this.rightArrow) {
+      this.rightArrow.disabled = this.currentIndex === this.totalCards - 1;
+    }
+  }
+
+  addSwipeSupport() {
+    let startX = 0;
+    let startY = 0;
+    let currentX = 0;
+    let currentY = 0;
+    let isDragging = false;
+    let isHorizontalSwipe = false;
+
+    this.carousel.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      isDragging = true;
+      isHorizontalSwipe = false;
+    }, { passive: true });
+
+    this.carousel.addEventListener('touchmove', (e) => {
+      if (!isDragging) return;
+      
+      currentX = e.touches[0].clientX;
+      currentY = e.touches[0].clientY;
+      
+      const diffX = Math.abs(currentX - startX);
+      const diffY = Math.abs(currentY - startY);
+      
+      if (diffX > 10 || diffY > 10) {
+        if (diffX > diffY * 1.5) {
+          isHorizontalSwipe = true;
+          if (e.cancelable) {
+            e.preventDefault();
+          }
+        } else {
+          isDragging = false;
+        }
+      }
+    }, { passive: false });
+
+    this.carousel.addEventListener('touchend', (e) => {
+      if (!isDragging || !isHorizontalSwipe) {
+        isDragging = false;
+        isHorizontalSwipe = false;
+        return;
+      }
+      
+      const endX = e.changedTouches[0].clientX;
+      const diff = startX - endX;
+
+      if (Math.abs(diff) > 50) {
+        if (diff > 0) {
+          this.goToNext();
+        } else {
+          this.goToPrevious();
+        }
+      }
+
+      isDragging = false;
+      isHorizontalSwipe = false;
+    }, { passive: true });
+  }
+}

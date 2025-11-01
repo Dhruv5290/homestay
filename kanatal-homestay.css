@@ -368,6 +368,26 @@ button {
   min-height: 70vh;
 }
 
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 25px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 30px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--primary);
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-soft);
+  opacity: 0;
+  animation: fadeUp 1s ease 0.2s forwards;
+}
+
+.hero-badge i {
+  color: var(--pastel-green);
+  font-size: 1rem;
+}
 
 .hero-title {
   font-family: var(--font-heading);
@@ -411,7 +431,7 @@ button {
   gap: 20px;
   justify-content: center;
   flex-wrap: wrap;
-  margin-bottom: 150px;
+  margin-bottom: 60px;
   opacity: 0;
   animation: fadeUp 1s ease 1.1s forwards;
 }
@@ -465,7 +485,7 @@ button {
 
 .scroll-indicator {
   position: absolute;
-  bottom: 30px;
+  bottom: 50px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -714,17 +734,17 @@ section {
   font-weight: 300;
 }
 
+  overflow: hidden;
 /* ===================================
    ROOMS SECTION
 =================================== */
 .rooms {
-  overflow: hidden;
   background: var(--pastel-cream);
+  overflow: hidden;
 }
 
 .rooms-carousel-wrapper {
   position: relative;
-  overflow: hidden;
   padding: 0 60px;
 }
 
@@ -952,6 +972,15 @@ section {
 =================================== */
 .amenities {
   background: var(--white);
+}
+
+.amenities-carousel-wrapper {
+  position: relative;
+}
+
+.amenities-arrow-left,
+.amenities-arrow-right {
+  display: none;
 }
 
 .amenities-grid {
@@ -1759,6 +1788,48 @@ section {
     font-size: 0.75rem;
     padding: 3px 0;
   }
+
+  /* Amenities Carousel on Mobile */
+  .amenities-carousel-wrapper {
+    padding: 0 50px;
+    overflow: hidden;
+  }
+  
+  .amenities-grid {
+    display: flex !important;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    gap: 20px;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    padding: 10px 5px 30px 5px;
+    scrollbar-width: none;
+    grid-template-columns: unset !important;
+  }
+  
+  .amenities-grid::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .amenity-card {
+    flex: 0 0 70%;
+    max-width: 70%;
+    scroll-snap-align: center;
+  }
+  
+  .amenities-arrow-left,
+  .amenities-arrow-right {
+    display: flex !important;
+  }
+  
+  .amenities-arrow-left {
+    left: 5px !important;
+  }
+  
+  .amenities-arrow-right {
+    right: 5px !important;
+  }
   
   .carousel-dots {
     display: flex;
@@ -1796,6 +1867,10 @@ section {
   .footer-content {
     grid-template-columns: 1fr;
     gap: 40px;
+  .scroll-indicator {
+    display: none;
+  }
+
   }
 
   .contact-form-container {
@@ -1819,14 +1894,12 @@ section {
     display: none;
   }
   
-  
   .float-element {
     font-size: 1.2rem;
   }
   
   .leaf-1 {
     top: 28%;
-    left: 5%;
   }
   
   .leaf-2 {
@@ -1841,6 +1914,30 @@ section {
   
   .hero-content {
     margin-bottom: 60px;
+  }
+
+  /* Amenities Carousel on small phones */
+  .amenities-carousel-wrapper {
+    padding: 0 45px;
+  }
+  
+  .amenity-card {
+    flex: 0 0 80%;
+    max-width: 80%;
+    padding: 30px 20px;
+  }
+  .amenities-arrow-left {
+    left: 5px !important;
+  }
+  
+  .amenities-arrow-right {
+    right: 5px !important;
+  }
+  
+  .amenity-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
   }
 
   .about-image {

@@ -360,30 +360,14 @@ button {
   text-align: center;
   padding: 0 5%;
   max-width: 900px;
-  margin-bottom: 100px;
-  min-height: auto;
-}
-
-.hero-badge {
-  display: inline-flex;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  gap: 8px;
-  padding: 10px 25px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 30px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--primary);
-  margin-bottom: 2rem;
-  box-shadow: var(--shadow-soft);
-  opacity: 0;
-  animation: fadeUp 1s ease 0.2s forwards;
+  min-height: 70vh;
 }
 
-.hero-badge i {
-  color: var(--pastel-green);
-  font-size: 1rem;
-}
 
 .hero-title {
   font-family: var(--font-heading);
@@ -427,7 +411,7 @@ button {
   gap: 20px;
   justify-content: center;
   flex-wrap: wrap;
-  margin-bottom: 60px;
+  margin-bottom: 150px;
   opacity: 0;
   animation: fadeUp 1s ease 1.1s forwards;
 }
@@ -481,7 +465,7 @@ button {
 
 .scroll-indicator {
   position: absolute;
-  bottom: 50px;
+  bottom: 30px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -752,7 +736,7 @@ section {
   gap: 30px;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
-  padding: 10px 5px 30px 5px;
+  padding: 10px 5px;
   scrollbar-width: none;
 }
 
@@ -1834,6 +1818,7 @@ section {
   .scroll-indicator {
     display: none;
   }
+  
   
   .float-element {
     font-size: 1.2rem;

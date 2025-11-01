@@ -745,7 +745,7 @@ section {
 .rooms-grid {
   display: flex;
   overflow-x: scroll;
-  overflow-y: visible;
+  overflow-y: hidden;
   scroll-snap-type: x mandatory;
   gap: 30px;
   scroll-behavior: smooth;

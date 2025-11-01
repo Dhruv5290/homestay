@@ -841,7 +841,7 @@ class App {
       new RoomsCarousel();
       new RoomImageZoom();
       
-      console.log('Ã¢Å“Â¨ Mountain Retreat website initialized successfully!');
+      console.log('✨ Mountain Retreat website initialized successfully!');
     } catch (error) {
       console.error('Error initializing website:', error);
     }

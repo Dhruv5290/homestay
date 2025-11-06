@@ -545,7 +545,7 @@ class ParallaxEffect {
 }
 
 // ===================================
-// ROOMS CAROUSEL (Mobile)
+// ROOMS CAROUSEL
 // ===================================
 
 class RoomsCarousel {
@@ -556,6 +556,8 @@ class RoomsCarousel {
     this.dotsContainer = document.getElementById('carouselDots');
     this.currentIndex = 0;
     this.totalRooms = 0;
+    this.isScrolling = false;
+    this.isMobile = window.innerWidth <= 768;
     this.init();
   }
 
@@ -564,7 +566,7 @@ class RoomsCarousel {
 
     this.totalRooms = this.carousel.querySelectorAll('.room-card').length;
     
-    // Create dots
+    // Create dots based on screen size
     this.createDots();
     
     // Arrow click handlers
@@ -576,11 +578,30 @@ class RoomsCarousel {
       this.rightArrow.addEventListener('click', () => this.goToNext());
     }
     
+    // Listen to manual scroll events
+    this.carousel.addEventListener('scroll', throttle(() => {
+      this.syncWithScroll();
+    }, 100));
+    
     // Touch/swipe support
     this.addSwipeSupport();
     
     // Keyboard support
     this.addKeyboardSupport();
+    
+    // Handle window resize
+    window.addEventListener('resize', debounce(() => {
+      const wasMobile = this.isMobile;
+      this.isMobile = window.innerWidth <= 768;
+      
+      // Recreate dots if screen size category changed
+      if (wasMobile !== this.isMobile) {
+        this.dotsContainer.innerHTML = '';
+        this.createDots();
+        this.currentIndex = 0;
+        this.updateCarousel();
+      }
+    }, 250));
     
     // Update initial state
     this.updateCarousel();
@@ -589,10 +610,14 @@ class RoomsCarousel {
   createDots() {
     if (!this.dotsContainer) return;
     
-    for (let i = 0; i < this.totalRooms; i++) {
+    // Desktop: 2 dots (showing 3 cards, need 2 positions)
+    // Mobile: 3 dots (showing 1 card at a time)
+    const numDots = this.isMobile ? this.totalRooms : Math.max(1, this.totalRooms - 1);
+    
+    for (let i = 0; i < numDots; i++) {
       const dot = document.createElement('button');
       dot.classList.add('carousel-dot');
-      dot.setAttribute('aria-label', `Go to room ${i + 1}`);
+      dot.setAttribute('aria-label', `Go to position ${i + 1}`);
       
       if (i === 0) {
         dot.classList.add('active');
@@ -603,7 +628,40 @@ class RoomsCarousel {
     }
   }
 
+  syncWithScroll() {
+    if (this.isScrolling) return;
+    
+    const scrollLeft = this.carousel.scrollLeft;
+    const cardWidth = this.carousel.querySelector('.room-card').offsetWidth;
+    const gap = 30;
+    
+    let newIndex;
+    
+    if (this.isMobile) {
+      // Mobile: each dot represents one card
+      newIndex = Math.round(scrollLeft / (cardWidth + gap));
+      newIndex = Math.max(0, Math.min(newIndex, this.totalRooms - 1));
+    } else {
+      // Desktop: each dot represents a scroll position
+      const maxScroll = this.carousel.scrollWidth - this.carousel.clientWidth;
+      if (maxScroll > 0) {
+        const scrollPercentage = scrollLeft / maxScroll;
+        newIndex = Math.round(scrollPercentage * (this.totalRooms - 2));
+        newIndex = Math.max(0, Math.min(newIndex, this.totalRooms - 2));
+      } else {
+        newIndex = 0;
+      }
+    }
+    
+    if (newIndex !== this.currentIndex) {
+      this.currentIndex = newIndex;
+      this.updateUI();
+    }
+  }
+
   goToPrevious() {
+    const maxIndex = this.isMobile ? this.totalRooms - 1 : this.totalRooms - 2;
+    
     if (this.currentIndex > 0) {
       this.currentIndex--;
       this.updateCarousel();
@@ -611,7 +669,9 @@ class RoomsCarousel {
   }
 
   goToNext() {
-    if (this.currentIndex < this.totalRooms - 1) {
+    const maxIndex = this.isMobile ? this.totalRooms - 1 : this.totalRooms - 2;
+    
+    if (this.currentIndex < maxIndex) {
       this.currentIndex++;
       this.updateCarousel();
     }
@@ -623,30 +683,57 @@ class RoomsCarousel {
   }
 
   updateCarousel() {
-    // Scroll to the current card
-    const cardWidth = this.carousel.querySelector('.room-card').offsetWidth;
+    this.isScrolling = true;
+    
+    const cards = this.carousel.querySelectorAll('.room-card');
+    const cardWidth = cards[0].offsetWidth;
+    const gap = 30;
+    
+    let scrollPosition;
+    
+    if (this.isMobile) {
+      // Mobile: scroll to specific card
+      scrollPosition = (cardWidth + gap) * this.currentIndex;
+    } else {
+      // Desktop: scroll to position (showing 3 cards at a time)
+      scrollPosition = (cardWidth + gap) * this.currentIndex;
+    }
+    
     this.carousel.scrollTo({
-      left: cardWidth * this.currentIndex,
+      left: scrollPosition,
       behavior: 'smooth'
     });
 
+    this.updateUI();
+    
+    // Reset scrolling flag after animation
+    setTimeout(() => {
+      this.isScrolling = false;
+    }, 500);
+  }
+
+  updateUI() {
     // Update dots
-    const dots = this.dotsContainer.querySelectorAll('.carousel-dot');
-    dots.forEach((dot, index) => {
-      if (index === this.currentIndex) {
-        dot.classList.add('active');
-      } else {
-        dot.classList.remove('active');
-      }
-    });
+    if (this.dotsContainer) {
+      const dots = this.dotsContainer.querySelectorAll('.carousel-dot');
+      dots.forEach((dot, index) => {
+        if (index === this.currentIndex) {
+          dot.classList.add('active');
+        } else {
+          dot.classList.remove('active');
+        }
+      });
+    }
 
     // Update arrow states
+    const maxIndex = this.isMobile ? this.totalRooms - 1 : this.totalRooms - 2;
+    
     if (this.leftArrow) {
       this.leftArrow.disabled = this.currentIndex === 0;
     }
     
     if (this.rightArrow) {
-      this.rightArrow.disabled = this.currentIndex === this.totalRooms - 1;
+      this.rightArrow.disabled = this.currentIndex >= maxIndex;
     }
   }
 
@@ -674,16 +761,13 @@ class RoomsCarousel {
       const diffX = Math.abs(currentX - startX);
       const diffY = Math.abs(currentY - startY);
       
-      // Determine if this is a horizontal swipe
       if (diffX > 10 || diffY > 10) {
         if (diffX > diffY * 1.5) {
-          // It's a horizontal swipe - prevent default
           isHorizontalSwipe = true;
           if (e.cancelable) {
             e.preventDefault();
           }
         } else {
-          // It's a vertical swipe - allow page scroll
           isDragging = false;
         }
       }
@@ -699,13 +783,10 @@ class RoomsCarousel {
       const endX = e.changedTouches[0].clientX;
       const diff = startX - endX;
 
-      // Swipe threshold
       if (Math.abs(diff) > 50) {
         if (diff > 0) {
-          // Swiped left - go to next
           this.goToNext();
         } else {
-          // Swiped right - go to previous
           this.goToPrevious();
         }
       }
@@ -717,7 +798,6 @@ class RoomsCarousel {
 
   addKeyboardSupport() {
     document.addEventListener('keydown', (e) => {
-      // Only respond to arrow keys when carousel is in view
       const carouselRect = this.carousel.getBoundingClientRect();
       const isInView = carouselRect.top < window.innerHeight && carouselRect.bottom > 0;
       
@@ -810,48 +890,6 @@ class SmoothScroll {
 }
 
 // ===================================
-// INITIALIZE ALL
-// ===================================
-
-class App {
-  constructor() {
-    this.init();
-  }
-
-  init() {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => {
-        this.initializeModules();
-      });
-    } else {
-      this.initializeModules();
-    }
-  }
-
-  initializeModules() {
-    try {
-      new LoadingScreen();
-      new Navigation();
-      new ScrollReveal();
-      new BackToTop();
-      new ContactForm();
-      new GalleryLightbox();
-      new ParallaxEffect();
-      new SmoothScroll();
-      new RoomsCarousel();
-      new RoomImageZoom();
-      new AmenitiesCarousel();
-      
-      console.log('✨ Mountain Retreat website initialized successfully!');
-    } catch (error) {
-      console.error('Error initializing website:', error);
-    }
-  }
-}
-
-// Start the application
-new App();
-// ===================================
 // AMENITIES CAROUSEL (Mobile)
 // ===================================
 
@@ -862,6 +900,8 @@ class AmenitiesCarousel {
     this.rightArrow = document.querySelector('.amenities-arrow-right');
     this.currentIndex = 0;
     this.totalCards = 0;
+    this.isScrolling = false;
+    this.isMobile = window.innerWidth <= 768;
     this.init();
   }
 
@@ -879,14 +919,66 @@ class AmenitiesCarousel {
       this.rightArrow.addEventListener('click', () => this.goToNext());
     }
     
+    // Listen to manual scroll events
+    this.carousel.addEventListener('scroll', throttle(() => {
+      this.syncWithScroll();
+    }, 100));
+    
     // Touch/swipe support
     this.addSwipeSupport();
+    
+    // Handle window resize
+    window.addEventListener('resize', debounce(() => {
+      const wasMobile = this.isMobile;
+      this.isMobile = window.innerWidth <= 768;
+      
+      // Reset if screen size category changed
+      if (wasMobile !== this.isMobile) {
+        this.currentIndex = 0;
+        this.updateCarousel();
+      }
+    }, 250));
     
     // Update initial state
     this.updateCarousel();
   }
 
+  syncWithScroll() {
+    if (this.isScrolling) return;
+    
+    const scrollLeft = this.carousel.scrollLeft;
+    
+    let newIndex;
+    
+    if (this.isMobile) {
+      // Mobile: calculate based on card width
+      const cardWidth = this.carousel.querySelector('.amenity-card').offsetWidth;
+      const gap = 20;
+      newIndex = Math.round(scrollLeft / (cardWidth + gap));
+      newIndex = Math.max(0, Math.min(newIndex, this.totalCards - 1));
+    } else {
+      // Desktop: calculate based on total scroll width
+      const maxScroll = this.carousel.scrollWidth - this.carousel.clientWidth;
+      if (maxScroll > 0) {
+        const scrollPercentage = scrollLeft / maxScroll;
+        // For 8 cards shown 4 at a time, we have 5 positions (0-4)
+        const maxIndex = Math.max(0, this.totalCards - 4);
+        newIndex = Math.round(scrollPercentage * maxIndex);
+        newIndex = Math.max(0, Math.min(newIndex, maxIndex));
+      } else {
+        newIndex = 0;
+      }
+    }
+    
+    if (newIndex !== this.currentIndex) {
+      this.currentIndex = newIndex;
+      this.updateUI();
+    }
+  }
+
   goToPrevious() {
+    const maxIndex = this.isMobile ? this.totalCards - 1 : Math.max(0, this.totalCards - 4);
+    
     if (this.currentIndex > 0) {
       this.currentIndex--;
       this.updateCarousel();
@@ -894,28 +986,54 @@ class AmenitiesCarousel {
   }
 
   goToNext() {
-    if (this.currentIndex < this.totalCards - 1) {
+    const maxIndex = this.isMobile ? this.totalCards - 1 : Math.max(0, this.totalCards - 4);
+    
+    if (this.currentIndex < maxIndex) {
       this.currentIndex++;
       this.updateCarousel();
     }
   }
 
   updateCarousel() {
-    // Scroll to the current card
-    const cardWidth = this.carousel.querySelector('.amenity-card').offsetWidth;
-    const gap = 20; // gap between cards
+    this.isScrolling = true;
+    
+    const cards = this.carousel.querySelectorAll('.amenity-card');
+    const cardWidth = cards[0].offsetWidth;
+    const gap = 20;
+    
+    let scrollPosition;
+    
+    if (this.isMobile) {
+      // Mobile: scroll to specific card
+      scrollPosition = (cardWidth + gap) * this.currentIndex;
+    } else {
+      // Desktop: scroll to position (showing 4 cards at a time)
+      scrollPosition = (cardWidth + gap) * this.currentIndex;
+    }
+    
     this.carousel.scrollTo({
-      left: (cardWidth + gap) * this.currentIndex,
+      left: scrollPosition,
       behavior: 'smooth'
     });
 
+    this.updateUI();
+    
+    // Reset scrolling flag after animation
+    setTimeout(() => {
+      this.isScrolling = false;
+    }, 500);
+  }
+
+  updateUI() {
+    const maxIndex = this.isMobile ? this.totalCards - 1 : Math.max(0, this.totalCards - 4);
+    
     // Update arrow states
     if (this.leftArrow) {
       this.leftArrow.disabled = this.currentIndex === 0;
     }
     
     if (this.rightArrow) {
-      this.rightArrow.disabled = this.currentIndex === this.totalCards - 1;
+      this.rightArrow.disabled = this.currentIndex >= maxIndex;
     }
   }
 
@@ -978,3 +1096,46 @@ class AmenitiesCarousel {
     }, { passive: true });
   }
 }
+
+// ===================================
+// INITIALIZE ALL
+// ===================================
+
+class App {
+  constructor() {
+    this.init();
+  }
+
+  init() {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        this.initializeModules();
+      });
+    } else {
+      this.initializeModules();
+    }
+  }
+
+  initializeModules() {
+    try {
+      new LoadingScreen();
+      new Navigation();
+      new ScrollReveal();
+      new BackToTop();
+      new ContactForm();
+      new GalleryLightbox();
+      new ParallaxEffect();
+      new SmoothScroll();
+      new RoomsCarousel();
+      new RoomImageZoom();
+      new AmenitiesCarousel();
+      
+      console.log('✨ Mountain Retreat website initialized successfully!');
+    } catch (error) {
+      console.error('Error initializing website:', error);
+    }
+  }
+}
+
+// Start the application
+new App();
